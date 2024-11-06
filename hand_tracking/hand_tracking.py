@@ -6,10 +6,10 @@ mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
 #pixel locations
-[pixel_x1, pixel_y1] = [361, 134]  # top left
-[pixel_x2, pixel_y2] = [1493, 134]  # top right
-[pixel_x3, pixel_y3] = [1493, 938]  # bottom right
-[pixel_x4, pixel_y4] = [361, 943]   # bottom left
+[pixel_x1, pixel_y1] = [926, 26]  # top left
+[pixel_x2, pixel_y2] = [1700, 24]  # top right
+[pixel_x3, pixel_y3] = [929, 1042]  # bottom right
+[pixel_x4, pixel_y4] = [1717, 1037]   # bottom left
 
 src_points = np.float32([
     [pixel_x1, pixel_y1],
@@ -21,9 +21,9 @@ src_points = np.float32([
 # real world points
 dst_points = np.float32([
     [0, 0],      # top left
-    [14, 0],     # top right
-    [14, 10],    # bottom right
-    [0, 10]      # bottom left
+    [0.2159, 0],     # top right
+    [0, 0.2794],    # bottom right
+    [0.2159, 0.2794]      # bottom left
 ])
 
 transformation_matrix = cv2.getPerspectiveTransform(src_points, dst_points)

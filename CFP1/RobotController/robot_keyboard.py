@@ -37,11 +37,11 @@ def IK(x, y):
     x = x - L_base/2
     L13 = np.sqrt(x**2 + y**2)
     L53 = np.sqrt((x+L_base)**2 + y**2)
-    alphaOne = np.acos(L13**2 / (2*L_link*L13))
-    betaOne = np.atan2(y, -x)
+    alphaOne = np.arccos(L13**2 / (2*L_link*L13))
+    betaOne = np.arctan2(y, -x)
     thetaOne = np.pi - alphaOne - betaOne
-    alphaFive = np.atan2(y, x+L_base)
-    betaFive = np.acos((L53**2) / (2*L53*L_link))
+    alphaFive = np.arctan2(y, x+L_base)
+    betaFive = np.arccos((L53**2) / (2*L53*L_link))
     thetaFive = alphaFive + betaFive
     ticks1 = int(radians_to_ticks(thetaFive) + 2048)
     ticks2 = int(radians_to_ticks(thetaOne) + 1032)
