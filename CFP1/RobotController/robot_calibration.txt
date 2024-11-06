@@ -1,0 +1,29 @@
+Dynamixel X-Series Servos are 4095 ticks/rev
+
+Motor 1 (Left Base)
+IN TICKS:
+    motor_1 = theta_1 + 2048
+    theta_1 = motor_1 - 2048
+Motor 2 (Right Base)
+IN TICKS:
+    motor_2 = theta_2 + 1032
+    theta_2 = motor_2 - 1032
+
+Motor 3 (Wrist in Linkage Frame)
+    motor_3 = 1012 when aligned with linkage Frame
+    add gamma rotation to motor_3 to get back to vertical (+)
+
+INCORRECT FK FUNCTION:
+def FK(theta1, theta2):
+    x2 = L_link * np.cos(theta2)
+    y2 = L_link * np.sin(theta2)
+    x4 = L_link * np.cos(theta1) - L_base
+    y4 = L_link * np.sin(theta1)
+    two_to_four = np.sqrt((x2-x4)**2 + (y2-y4)**2)
+    two_to_h = (two_to_four**2) / (2*two_to_four)
+    xh = x2 + (two_to_h / two_to_four) * (x4-x2)
+    yh = y2 + (two_to_h / two_to_four) * (y4-y2)
+    three_to_h = np.sqrt(L_link**2 - two_to_h**2)
+    x = xh + (three_to_h / two_to_four) * (x4-x2) + L_base/2
+    y = yh - (three_to_h / two_to_four) * (y4-y2)
+    return x, y
