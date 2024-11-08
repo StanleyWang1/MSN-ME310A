@@ -3,15 +3,20 @@ Dynamixel X-Series Servos are 4095 ticks/rev
 Motor 1 (Left Base)
 IN TICKS:
     motor_1 = theta_1 + 2048
+        -1020 for new motor 12
     theta_1 = motor_1 - 2048
 Motor 2 (Right Base)
 IN TICKS:
     motor_2 = theta_2 + 1032
     theta_2 = motor_2 - 1032
+        + 3090 for new motor 13
 
 Motor 3 (Wrist in Linkage Frame)
     motor_3 = 1012 when aligned with linkage Frame
     add gamma rotation to motor_3 to get back to vertical (+)
+
+Motor 4 (gripper)
+closed position = 2000 ticks, ++ direction to open
 
 INCORRECT FK FUNCTION:
 def FK(theta1, theta2):
