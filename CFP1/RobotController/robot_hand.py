@@ -50,7 +50,7 @@ def IK(x, y):
     ticks2 = int(radians_to_ticks(thetaOne) + 3090)
 
     gamma = np.pi/2 - betaOne  + alphaOne
-    ticks3 = int(radians_to_ticks(gamma) + 1012)
+    ticks3 = int(radians_to_ticks(gamma) + 750)
 
     return ticks1, ticks2, ticks3
 
@@ -81,10 +81,14 @@ controller.WRITE(RIGHT_BASE_MOTOR, TORQUE_ENABLE, 1)
 controller.WRITE(WRIST_MOTOR, TORQUE_ENABLE, 1)
 controller.WRITE(GRIPPER_MOTOR, TORQUE_ENABLE, 1)
 # Limit Profile Velocity
-profile_velocity_limit = 50
+profile_velocity_limit = 100
 controller.WRITE(LEFT_BASE_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
 controller.WRITE(RIGHT_BASE_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
 controller.WRITE(WRIST_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
+profile_acceleration_limit = 100
+controller.WRITE(LEFT_BASE_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
+controller.WRITE(RIGHT_BASE_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
+controller.WRITE(WRIST_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
 
 # -------------------- HAND TRACKING STUFF --------------------
 
