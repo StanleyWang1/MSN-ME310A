@@ -8,7 +8,7 @@ mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.7)
 mp_draw = mp.solutions.drawing_utils
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 recording = False
 positions = []
@@ -26,11 +26,15 @@ while cap.isOpened():
 
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
-            index_tip = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
+            # Get the wrist landmark (base of the palm)
+            wrist = hand_landmarks.landmark[mp_hands.HandLandmark.WRIST]
             h, w, _ = frame.shape
-            cx, cy = int(index_tip.x * w), int(index_tip.y * h)
+            cx, cy = int(wrist.x * w), int(wrist.y * h)
+
+            # Draw a circle at the wrist position
             cv2.circle(frame, (cx, cy), 10, (0, 255, 0), -1)
             mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
             if recording:
                 if start_time is None:
                     start_time = time.time()
@@ -39,7 +43,9 @@ while cap.isOpened():
                     positions.append((cx, cy))
                 else:
                     recording = False
-            cv2.putText(frame, f"Index Tip: ({cx}, {cy})", (10, 50),
+
+            # Display wrist coordinates
+            cv2.putText(frame, f"Wrist: ({cx}, {cy})", (10, 50),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     if recording:
@@ -66,7 +72,7 @@ if positions:
 
     plt.figure()
     plt.plot(times, distances)
-    plt.title("Positional Error vs Time")
+    plt.title("Wrist Movement Over Time")
     plt.xlabel("Time (s)")
     plt.ylabel("Distance (pixels)")
     plt.grid(True)
