@@ -1,4 +1,5 @@
 import cv2
+import time
 import numpy as np
 
 # Specify the desired ArUco dictionary
@@ -24,10 +25,24 @@ def main():
     detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_params)
 
     # Start the webcam
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
+    # Set resolution to 720p (1280x720) and framerate to 60 fps
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
+    cap.set(cv2.CAP_PROP_FPS, 30)
+
+    # Verify settings
+    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    print(f"Resolution: {int(width)}x{int(height)}, FPS: {fps}")
+    
     # Variables to store marker positions
     marker_positions = {1: None, 22: None, 33: None}
+    prev_time = time.time()
+    frame_count = 0
+    fps = 0
 
     while True:
         ret, frame = cap.read()
@@ -78,6 +93,16 @@ def main():
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
                 cv2.putText(frame, f"Angle 1-33/Vertical: {angle_with_vertical:.2f} deg", (10, 60),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+
+        # Calculate and display FPS
+        frame_count += 1
+        current_time = time.time()
+        elapsed_time = current_time - prev_time
+        if elapsed_time >= 1.0:  # Update every second
+            fps = frame_count / elapsed_time
+            prev_time = current_time
+            frame_count = 0
+        cv2.putText(frame, f"FPS: {fps:.2f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
         # Display the frame
         cv2.imshow('ArUco Marker Detector', frame)

@@ -40,7 +40,10 @@ def calculate_angle(vec1, vec2):
     angle = np.arccos(dot_product)
     return np.degrees(angle)
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cap.set(cv2.CAP_PROP_FPS, 30)
 
 with mp_hands.Hands(
         static_image_mode=False,

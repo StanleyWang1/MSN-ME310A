@@ -1,6 +1,7 @@
 import threading
 import time
 from dynamixel_controller import DynamixelController
+from dynamixel_sdk import *
 import numpy as np
 
 # XH-430-W250-T Serial Addresses
@@ -35,7 +36,8 @@ radius = 0.05
 speed = 0.5  # speed in radians per second
 
 # Initialize controller
-controller = DynamixelController('/dev/tty.usbserial-FT89FIU6', 57600, 2.0)
+controller = DynamixelController('COM3', 3000000, 2.0)
+group_sync_write = GroupSyncWrite(controller.port_handler, controller.packet_handler, GOAL_POSITION[0], GOAL_POSITION[1])
 
 # Set Control Mode
 controller.WRITE(LEFT_BASE_MOTOR, OPERATING_MODE, 4) # extended position control 
@@ -69,6 +71,26 @@ controller.WRITE(LEFT_BASE_MOTOR, PROFILE_VELOCITY, profile_velocity_limit)
 controller.WRITE(RIGHT_BASE_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
 controller.WRITE(WRIST_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
 
+def sync_write_positions(ticks1, ticks2, ticks3):
+    # Add motor and goal position data
+    param_success = group_sync_write.addParam(LEFT_BASE_MOTOR, ticks1.to_bytes(4, 'little'))
+    param_success &= group_sync_write.addParam(RIGHT_BASE_MOTOR, ticks2.to_bytes(4, 'little'))
+    param_success &= group_sync_write.addParam(WRIST_MOTOR, ticks3.to_bytes(4, 'little'))
+    
+    if not param_success:
+        print("Failed to add parameters for SyncWrite")
+        return False
+    
+    # Send SyncWrite packet
+    dxl_comm_result = group_sync_write.txPacket()
+    if dxl_comm_result != COMM_SUCCESS:
+        print(f"SyncWrite communication error: {controller.packet_handler.getTxRxResult(dxl_comm_result)}")
+        return False
+    
+    # Clear parameters after transmission
+    group_sync_write.clearParam()
+    return True
+
 def ticks_to_radians(ticks):
     return ticks / 4095 * 2 * np.pi
 
@@ -96,6 +118,8 @@ def IK(x, y):
 # Control Thread Function
 def control_thread():
     start_time = time.time()
+    last_time = start_time
+    command_count = 0  # Count commands
     while True:
         # Calculate current angle based on elapsed time
         elapsed_time = time.time() - start_time
@@ -109,15 +133,34 @@ def control_thread():
         ticks1, ticks2, ticks3 = IK(x, y)
 
         # Update motor positions
-        controller.WRITE(LEFT_BASE_MOTOR, GOAL_POSITION, ticks1)
-        controller.WRITE(RIGHT_BASE_MOTOR, GOAL_POSITION, ticks2)
-        controller.WRITE(WRIST_MOTOR, GOAL_POSITION, ticks3)
+        # Example: Timing WRITE calls
+        start_write = time.time()
+        # SUPER SLOW (RUNS AT <20 HZ)
+        # controller.WRITE(LEFT_BASE_MOTOR, GOAL_POSITION, ticks1)
+        # controller.WRITE(RIGHT_BASE_MOTOR, GOAL_POSITION, ticks2)
+        # controller.WRITE(WRIST_MOTOR, GOAL_POSITION, ticks3)
+        sync_write_positions(ticks1, ticks2, ticks3)
+        end_write = time.time()
+        # print(f"WRITE Time: {end_write - start_write:.6f} seconds")
+
+
+        # Increment command counter
+        command_count += 1
+
+        # Measure frequency every second
+        current_time = time.time()
+        if current_time - last_time >= 1.0:
+            frequency = command_count / (current_time - last_time)
+            print(f"Command Frequency: {frequency:.2f} Hz")
+            command_count = 0
+            last_time = current_time
 
         # Control loop frequency
-        time.sleep(0.005)  # Adjust as needed
+        # time.sleep(0.01)  # Adjust as needed
 
 # Start control thread
 control_t = threading.Thread(target=control_thread)
 control_t.start()
 
 control_t.join()
+
