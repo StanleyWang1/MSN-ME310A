@@ -73,7 +73,7 @@ def IK(x, y):
     return ticks1, ticks2, ticks3
 
 # Initialize controller
-controller = DynamixelController('COM3', 3000000, 2.0)
+controller = DynamixelController('COM3', 1000000, 2.0)
 group_sync_write = GroupSyncWrite(controller.port_handler, controller.packet_handler, GOAL_POSITION[0], GOAL_POSITION[1])
 
 # Set Control Mode
@@ -101,11 +101,11 @@ controller.WRITE(RIGHT_BASE_MOTOR, TORQUE_ENABLE, 1)
 controller.WRITE(WRIST_MOTOR, TORQUE_ENABLE, 1)
 controller.WRITE(GRIPPER_MOTOR, TORQUE_ENABLE, 1)
 # Limit Profile Velocity
-profile_velocity_limit = 1000
+profile_velocity_limit = 500
 controller.WRITE(LEFT_BASE_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
 controller.WRITE(RIGHT_BASE_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
 controller.WRITE(WRIST_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
-profile_acceleration_limit = 1000
+profile_acceleration_limit = 500
 controller.WRITE(LEFT_BASE_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
 controller.WRITE(RIGHT_BASE_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
 controller.WRITE(WRIST_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
@@ -268,7 +268,7 @@ def control_thread():
                 # controller.WRITE(GRIPPER_MOTOR, GOAL_POSITION, 1800 + gripper_offset)
                 sync_write_positions(ticks1, ticks2, ticks3+wrist_offset, 1800+gripper_offset)
 
-        time.sleep(0.005)  # Control loop frequency (50 Hz)
+        time.sleep(0.0025)  # Control loop frequency (50 Hz)
 
 # Start threads
 camera_t = threading.Thread(target=camera_thread)

@@ -30,7 +30,7 @@ def main():
     # Set resolution to 720p (1280x720) and framerate to 60 fps
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
-    cap.set(cv2.CAP_PROP_FPS, 30)
+    cap.set(cv2.CAP_PROP_FPS, 60)
 
     # Verify settings
     width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
