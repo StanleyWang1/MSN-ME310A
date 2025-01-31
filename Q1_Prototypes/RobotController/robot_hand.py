@@ -165,7 +165,7 @@ position_lock = threading.Lock()
 # Camera Thread Function
 def camera_thread():
     global hand_position
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920*scale_factor)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080*scale_factor)
     cap.set(cv2.CAP_PROP_FPS, 30)
