@@ -1,5 +1,6 @@
 import threading
 import time
+from dynamixel_sdk import *
 from dynamixel_controller import DynamixelController
 import numpy as np
 import cv2
@@ -32,6 +33,23 @@ GRIPPER_MOTOR = 4
 # Kinematic Parameters
 L_base = 0.075 # [m]
 L_link = 0.150 # [m]
+
+def sync_write_positions(ticks1, ticks2, ticks3, ticks4):
+    param_success = group_sync_write.addParam(LEFT_BASE_MOTOR, ticks1.to_bytes(4, 'little'))
+    param_success &= group_sync_write.addParam(RIGHT_BASE_MOTOR, ticks2.to_bytes(4, 'little'))
+    param_success &= group_sync_write.addParam(WRIST_MOTOR, ticks3.to_bytes(4, 'little'))
+    param_success &= group_sync_write.addParam(GRIPPER_MOTOR, ticks4.to_bytes(4, 'little'))
+
+    if not param_success:
+        print("Failed to add parameters for SyncWrite")
+        return False
+    dxl_comm_result = group_sync_write.txPacket()
+    if dxl_comm_result != COMM_SUCCESS:
+        print(f"SyncWrite communication error: {controller.packet_handler.getTxRxResult(dxl_comm_result)}")
+        return False
+    group_sync_write.clearParam()
+    return True
+
 def ticks_to_radians(ticks):
     return ticks/4095*2*np.pi
 def radians_to_ticks(theta):
@@ -54,7 +72,9 @@ def IK(x, y):
 
     return ticks1, ticks2, ticks3
 
-controller = DynamixelController('/dev/tty.usbserial-FT89FIU6', 57600, 2.0)
+# Initialize controller
+controller = DynamixelController('COM3', 1000000, 2.0)
+group_sync_write = GroupSyncWrite(controller.port_handler, controller.packet_handler, GOAL_POSITION[0], GOAL_POSITION[1])
 
 # Set Control Mode
 controller.WRITE(LEFT_BASE_MOTOR, OPERATING_MODE, 4) # extended position control 
@@ -81,11 +101,11 @@ controller.WRITE(RIGHT_BASE_MOTOR, TORQUE_ENABLE, 1)
 controller.WRITE(WRIST_MOTOR, TORQUE_ENABLE, 1)
 controller.WRITE(GRIPPER_MOTOR, TORQUE_ENABLE, 1)
 # Limit Profile Velocity
-profile_velocity_limit = 100
+profile_velocity_limit = 500
 controller.WRITE(LEFT_BASE_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
 controller.WRITE(RIGHT_BASE_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
 controller.WRITE(WRIST_MOTOR, PROFILE_VELOCITY, profile_velocity_limit) 
-profile_acceleration_limit = 100
+profile_acceleration_limit = 500
 controller.WRITE(LEFT_BASE_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
 controller.WRITE(RIGHT_BASE_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
 controller.WRITE(WRIST_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit) 
@@ -95,11 +115,12 @@ controller.WRITE(WRIST_MOTOR, PROFILE_ACCELERATION, profile_acceleration_limit)
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
+scale_factor = 0.5
 #pixel locations
-[pixel_x1, pixel_y1] = [926, 26]  # top left
-[pixel_x2, pixel_y2] = [1700, 24]  # top right
-[pixel_x3, pixel_y3] = [929, 1042]  # bottom right
-[pixel_x4, pixel_y4] = [1717, 1037]   # bottom left
+[pixel_x1, pixel_y1] = [926*scale_factor, 26*scale_factor]  # top left
+[pixel_x2, pixel_y2] = [1700*scale_factor, 24*scale_factor]  # top right
+[pixel_x3, pixel_y3] = [929*scale_factor, 1042*scale_factor]  # bottom right
+[pixel_x4, pixel_y4] = [1717*scale_factor, 1037*scale_factor]   # bottom left
 
 src_points = np.float32([
     [pixel_x1, pixel_y1],
@@ -145,6 +166,9 @@ position_lock = threading.Lock()
 def camera_thread():
     global hand_position
     cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920*scale_factor)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080*scale_factor)
+    cap.set(cv2.CAP_PROP_FPS, 30)
     with mp_hands.Hands(
             static_image_mode=False,
             max_num_hands=1,
@@ -238,12 +262,13 @@ def control_thread():
                 gripper_offset = int(radians_to_ticks(hand_position[3]))  # Angle does not need smoothing
 
                 # Update motor positions
-                controller.WRITE(LEFT_BASE_MOTOR, GOAL_POSITION, ticks1)
-                controller.WRITE(RIGHT_BASE_MOTOR, GOAL_POSITION, ticks2)
-                controller.WRITE(WRIST_MOTOR, GOAL_POSITION, ticks3 + wrist_offset)
-                controller.WRITE(GRIPPER_MOTOR, GOAL_POSITION, 1800 + gripper_offset)
+                # controller.WRITE(LEFT_BASE_MOTOR, GOAL_POSITION, ticks1)
+                # controller.WRITE(RIGHT_BASE_MOTOR, GOAL_POSITION, ticks2)
+                # controller.WRITE(WRIST_MOTOR, GOAL_POSITION, ticks3 + wrist_offset)
+                # controller.WRITE(GRIPPER_MOTOR, GOAL_POSITION, 1800 + gripper_offset)
+                sync_write_positions(ticks1, ticks2, ticks3+wrist_offset, 1800+gripper_offset)
 
-        time.sleep(0.005)  # Control loop frequency (50 Hz)
+        time.sleep(0.0025)  # Control loop frequency (50 Hz)
 
 # Start threads
 camera_t = threading.Thread(target=camera_thread)
