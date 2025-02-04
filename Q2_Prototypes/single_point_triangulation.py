@@ -7,9 +7,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 # (Average) camera intrinsic for both Oak-D S-2 cameras (at 360p res)
+scale_factor = 6
 K = np.array([
-    [1025.998, 0.0, 644.036],
-    [0.0, 1025.596, 362.692],
+    [3077.994/scale_factor, 0.0, 1932.107/scale_factor],
+    [0.0, 3076.787/scale_factor, 1088.077/scale_factor],
     [0.0, 0.0, 1.0]
 ])
 K_inv = np.linalg.inv(K)
@@ -156,9 +157,9 @@ def visualize_3d():
     ax.set_title('3D Point Visualization')
 
     # Set fixed axis limits
-    ax.set_xlim(-100, 100)  # X-axis range in mm
-    ax.set_ylim(-100, 100)  # Y-axis range in mm
-    ax.set_zlim(300, 500)   # Z-axis range in mm
+    ax.set_xlim(-200, 200)  # X-axis range in mm
+    ax.set_ylim(-200, 200)  # Y-axis range in mm
+    ax.set_zlim(-50, 350)   # Z-axis range in mm
 
     while True:
         if current_3d_point is not None:
@@ -172,9 +173,9 @@ def visualize_3d():
             ax.set_ylabel('Y (mm)')
             ax.set_zlabel('Z (mm)')
             ax.set_title('3D Point Visualization')
-            ax.set_xlim(-100, 100)
-            ax.set_ylim(-100, 100)
-            ax.set_zlim(300, 500)
+            ax.set_xlim(-200, 200)
+            ax.set_ylim(-200, 200)
+            ax.set_zlim(-50, 350)
 
             plt.pause(0.05)
 
@@ -193,10 +194,10 @@ else:
 
     # Start triangulation and visualization threads
     triangulation_thread = threading.Thread(target=triangulate)
-    visualization_thread = threading.Thread(target=visualize_3d)
+    # visualization_thread = threading.Thread(target=visualize_3d)
 
     triangulation_thread.start()
-    visualization_thread.start()
+    # visualization_thread.start()
 
     # Display loop
     while True:
