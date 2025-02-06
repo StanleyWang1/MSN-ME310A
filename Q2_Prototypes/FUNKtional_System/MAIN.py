@@ -8,6 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from utils import smooth_keypoints
 from camera_config import K_inv, W_T_C1, W_T_C2, b
+from robot_sim import initialize_simulation, command_sphere_position, close_simulation
 
 # Shared frame storage for both cameras
 frames = [None, None]
@@ -156,38 +157,43 @@ def triangulate():
 def visualize_3d():
     global current_3d_points
 
-    plt.ion()  # Turn on interactive mode
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    ax.set_xlabel('X (mm)')
-    ax.set_ylabel('Y (mm)')
-    ax.set_zlabel('Z (mm)')
-    ax.set_title('3D Point Visualization')
-
-    # Set fixed axis limits
-    ax.set_xlim(-200, 200)  # X-axis range in mm
-    ax.set_ylim(-200, 200)  # Y-axis range in mm
-    ax.set_zlim(-50, 350)   # Z-axis range in mm
-
+    initialize_simulation()
     while True:
-        if current_3d_points is not None:
-            ax.clear()
+        command_sphere_position(current_3d_points)
+        time.sleep(0.01)
 
-            # Plot each 3D point from current_3d_points
-            for point in current_3d_points:
-                ax.scatter(point[0], point[1], point[2], color='r', s=50)
+    # plt.ion()  # Turn on interactive mode
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
 
-            # Reapply axis labels, title, and limits
-            ax.set_xlabel('X (mm)')
-            ax.set_ylabel('Y (mm)')
-            ax.set_zlabel('Z (mm)')
-            ax.set_title('3D Point Visualization')
-            ax.set_xlim(-200, 200)
-            ax.set_ylim(-200, 200)
-            ax.set_zlim(-50, 350)
+    # ax.set_xlabel('X (mm)')
+    # ax.set_ylabel('Y (mm)')
+    # ax.set_zlabel('Z (mm)')
+    # ax.set_title('3D Point Visualization')
 
-            plt.pause(0.05)
+    # # Set fixed axis limits
+    # ax.set_xlim(-200, 200)  # X-axis range in mm
+    # ax.set_ylim(-200, 200)  # Y-axis range in mm
+    # ax.set_zlim(-50, 350)   # Z-axis range in mm
+
+    # while True:
+    #     if current_3d_points is not None:
+    #         ax.clear()
+
+    #         # Plot each 3D point from current_3d_points
+    #         for point in current_3d_points:
+    #             ax.scatter(point[0], point[1], point[2], color='r', s=50)
+
+    #         # Reapply axis labels, title, and limits
+    #         ax.set_xlabel('X (mm)')
+    #         ax.set_ylabel('Y (mm)')
+    #         ax.set_zlabel('Z (mm)')
+    #         ax.set_title('3D Point Visualization')
+    #         ax.set_xlim(-200, 200)
+    #         ax.set_ylim(-200, 200)
+    #         ax.set_zlim(-50, 350)
+
+    #         plt.pause(0.05)
 
 # Get connected devices
 available_devices = dai.Device.getAllAvailableDevices()

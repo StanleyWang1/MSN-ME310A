@@ -1,68 +1,66 @@
 import mujoco
-import numpy as np
 import time
-from mujoco.viewer import launch
+import numpy as np
+from mujoco.viewer import launch_passive
 
-def simulate_sphere(x: float, y: float, z: float):
+# Global viewer instance
+viewer = None
+model = None
+data = None
+
+def initialize_simulation():
     """
-    Simulates a sphere following a sinusoidal trajectory along the x-axis.
-
-    Parameters:
-    - y (float): Constant y-position in mm.
-    - z (float): Constant z-position in mm.
-    - amplitude (float): Amplitude of the sinusoidal motion (meters).
-    - frequency (float): Frequency of the sinusoidal motion (Hz).
-    - duration (float): Duration of the simulation (seconds).
+    Initializes the MuJoCo model, data, and viewer. Called only once.
     """
+    global viewer, model, data
 
-    # Convert positions from mm to meters
-    x, y, z = x / 1000.0, y / 1000.0, z / 1000.0
-
-    # Define an XML model string for the ball simulation
-    model_xml = f"""
-    <mujoco model="sinusoidal_sphere_simulation">
-        <worldbody>
-            <!-- Ground plane -->
-            <geom name="ground" type="plane" size="5 5 0.1" rgba="0.7 0.7 0.7 1"/>
-            
-            <!-- Sphere object with a free joint -->
-            <body name="ball" pos="0 {y} {z}">
-                <freejoint name="ball_joint"/>
-                <geom name="ball_geom" type="sphere" size="0.03" rgba="1 0 0 1"/>
-            </body>
-        </worldbody>
-        <option timestep="0.01"/>
-    </mujoco>
-    """
-
-    # Create the model and simulation
-    model = mujoco.MjModel.from_xml_string(model_xml)
+    # Load the model from XML string (or path to XML file)
+    xml_path = "./Q2_Prototypes/FUNKtional_System/robot.xml"
+    model = mujoco.MjModel.from_xml_path(xml_path)
     data = mujoco.MjData(model)
 
-    # Initialize simulation parameters
-    start_time = time.time()
-    current_time = 0.0
-    timestep = model.opt.timestep
+    # Launch the passive viewer
+    viewer = launch_passive(model, data)
 
-    while current_time < duration:
-        # Calculate the sinusoidal x-position based on current time
-        x_pos = amplitude * np.sin(2 * np.pi * frequency * current_time)
 
-        # Update the position of the ball (qpos has 7 elements for freejoint: [x, y, z, qx, qy, qz, qw])
-        data.qpos[:3] = [x_pos, y, z]
+def command_sphere_position(point_positions):
+    """
+    Commands the sphere to specified x, y, z positions using slider joints.
+    The viewer is synchronized after each step.
+    
+    Parameters:
+    - x_target (float): Target position along the x-axis (in meters).
+    - y_target (float): Target position along the y-axis (in meters).
+    - z_target (float): Target position along the z-axis (in meters).
+    """
 
-        # Step the simulation
-        mujoco.mj_step(model, data)
+    # Ensure the simulation is initialized
+    if viewer is None:
+        raise RuntimeError("Simulation has not been initialized. Call `initialize_simulation()` first.")
 
-        # Update time and render
-        current_time = time.time() - start_time
-        mujoco.mj_forward(model, data)
+    # Update control inputs for the actuators
+    data.ctrl[0] = point_positions[0][0]/1000.0  # Target position for x-axis
+    data.ctrl[1] = point_positions[0][1]/1000.0  # Target position for y-axis
+    data.ctrl[2] = point_positions[0][2]/1000.0  # Target position for z-axis
 
-        # Sleep to match real-time simulation speed
-        time.sleep(timestep)
+    data.ctrl[3] = point_positions[1][0]/1000.0  # Target position for x-axis
+    data.ctrl[4] = point_positions[1][1]/1000.0  # Target position for y-axis
+    data.ctrl[5] = point_positions[1][2]/1000.0  # Target position for z-axis
 
-    # Launch the viewer to visualize the final result (optional)
-    launch(model, data)
+    data.ctrl[6] = point_positions[2][0]/1000.0  # Target position for x-axis
+    data.ctrl[7] = point_positions[2][1]/1000.0  # Target position for y-axis
+    data.ctrl[8] = point_positions[2][2]/1000.0  # Target position for z-axis
+    # Step the simulation and sync the viewer
+    mujoco.mj_step(model, data)
+    viewer.sync()
 
-# Example usage: sinusoidal trajectory with y = 200 mm, z = 300 mm, amplitude 0.1 meters, frequency 0.5 Hz
-simulate_sphere_sinusoidal(y=200, z=300, amplitude=0.1, frequency=0.5, duration=10.0)
+
+def close_simulation():
+    """
+    Closes the viewer and cleans up the simulation.
+    """
+    global viewer
+
+    if viewer is not None:
+        viewer.close()
+        viewer = None
