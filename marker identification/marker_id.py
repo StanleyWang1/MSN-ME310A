@@ -1,8 +1,17 @@
 import numpy as np
 
-def assign_points(points, distance_matrix, x, y):
+def assign_points(points):
 
-    D = distance_matrix
+    D = np.zeros((3, 3))
+
+    for i in range(3):
+        for j in range(i + 1, 3):
+            D[i, j] = np.linalg.norm(np.array(points[i]) - np.array(points[j]))
+
+    upper_triangular_values = D[np.triu_indices(3, k=1)]
+    x = np.max(upper_triangular_values)
+    y = np.min(upper_triangular_values)
+
     D12, D13, D23 = D[0, 1], D[0, 2], D[1, 2]  # Using 0-based indexing
 
     if x == D12 and y == D13:
@@ -25,17 +34,8 @@ def assign_points(points, distance_matrix, x, y):
 
 if __name__ == "__main__":
 
-    points = [(0, 4, 0), (0, 0, 0), (1, 1, 0)]
-    distance_matrix = np.zeros((3, 3))
+    points = [(0, 0, 0), (0, 4, 0), (1, 1, 0)]
 
-    for i in range(3):
-        for j in range(i + 1, 3):
-            distance_matrix[i, j] = np.linalg.norm(np.array(points[i]) - np.array(points[j]))
-
-    upper_triangular_values = distance_matrix[np.triu_indices(3, k=1)]
-    x = np.max(upper_triangular_values)
-    y = np.min(upper_triangular_values)
-
-    A, B, C = assign_points(points, distance_matrix, x, y)
+    A, B, C = assign_points(points)
 
     print(f"A: {A}, B: {B}, C: {C}")
