@@ -30,5 +30,11 @@ R_2 = np.array([
 t_2 = np.array([[w / 2], [0], [h]])
 W_T_C2 = np.block([[R_2, t_2], [np.zeros((1, 3)), 1]])
 
-# Term for least squares
-b = t_2 - t_1
+# Camera projection matrices - terms for least squares
+M = np.array([[1, 0, 0, 0],
+              [0, 1, 0, 0],
+              [0, 0, 1, 0]])
+P1 = K @ M @ np.linalg.inv(W_T_C1)
+P2 = K @ M @ np.linalg.inv(W_T_C2)
+
+# b = t_2 - t_1

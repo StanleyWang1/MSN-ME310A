@@ -49,7 +49,3 @@ def smooth_keypoints(keypoints, prev_keypoints, distance_threshold=1000):
 
     # Ensure exactly three keypoints are returned
     return updated_keypoints
-
-# def triangulate(c1_coords, c2_coords):
-#     points_3d = []
-#     for 

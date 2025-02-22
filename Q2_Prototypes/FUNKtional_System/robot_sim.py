@@ -8,6 +8,10 @@ viewer = None
 model = None
 data = None
 
+# Offset to shift gripper slightly in Z
+y_offset = -0.05
+z_offset = -0.1 # [m]
+
 def initialize_simulation():
     """
     Initializes the MuJoCo model, data, and viewer. Called only once.
@@ -39,17 +43,17 @@ def command_sphere_position(point_positions):
         raise RuntimeError("Simulation has not been initialized. Call `initialize_simulation()` first.")
 
     # Update control inputs for the actuators
-    data.ctrl[0] = point_positions[0][0]/1000.0  # Target position for x-axis
-    data.ctrl[1] = point_positions[0][1]/1000.0  # Target position for y-axis
-    data.ctrl[2] = point_positions[0][2]/1000.0  # Target position for z-axis
+    data.ctrl[0] = point_positions[0][0] # Target position for x-axis
+    data.ctrl[1] = point_positions[0][1] + y_offset # Target position for y-axis
+    data.ctrl[2] = point_positions[0][2] + z_offset  # Target position for z-axis
 
-    data.ctrl[3] = point_positions[1][0]/1000.0  # Target position for x-axis
-    data.ctrl[4] = point_positions[1][1]/1000.0  # Target position for y-axis
-    data.ctrl[5] = point_positions[1][2]/1000.0  # Target position for z-axis
+    data.ctrl[3] = point_positions[1][0]  # Target position for x-axis
+    data.ctrl[4] = point_positions[1][1] + y_offset  # Target position for y-axis
+    data.ctrl[5] = point_positions[1][2] + z_offset  # Target position for z-axis
 
-    data.ctrl[6] = point_positions[2][0]/1000.0  # Target position for x-axis
-    data.ctrl[7] = point_positions[2][1]/1000.0  # Target position for y-axis
-    data.ctrl[8] = point_positions[2][2]/1000.0  # Target position for z-axis
+    data.ctrl[6] = point_positions[2][0]  # Target position for x-axis
+    data.ctrl[7] = point_positions[2][1] + y_offset  # Target position for y-axis
+    data.ctrl[8] = point_positions[2][2] + z_offset  # Target position for z-axis
     # Step the simulation and sync the viewer
     mujoco.mj_step(model, data)
     viewer.sync()
